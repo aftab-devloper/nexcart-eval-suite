@@ -1,0 +1,41 @@
+name: AI Eval Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  run-evals:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run PromptFoo Evals
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: npx promptfoo eval --output eval-results.json
+
+      - name: Check eval results
+        run: |
+          node -e "
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('eval-results.json'));
+          const failed = data.results.results.filter(r => !r.success).length;
+          if (failed > 0) {
+            console.log(failed + ' test(s) failed');
+            process.exit(1);
+          }
+          console.log('All tests passed');
+          "

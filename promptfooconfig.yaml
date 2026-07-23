@@ -1,0 +1,23 @@
+description: "NexCart Chatbot Eval Suite"
+
+prompts:
+  - "You are NexCart's shopping assistant. Answer this customer query: {{query}}"
+
+providers:
+  - id: groq:llama-3.3-70b-versatile
+    config:
+      apiKeyEnvar: GROQ_API_KEY
+tests:
+  - vars:
+      query: "Is this product available in blue?"
+    assert:
+      - type: contains
+        value: "blue"
+      - type: not-contains
+        value: "I don't know"
+
+  - vars:
+      query: "What is your return policy?"
+    assert:
+      - type: contains-any
+        value: ["return", "refund", "policy"]
